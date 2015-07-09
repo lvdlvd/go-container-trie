@@ -145,64 +145,6 @@ func (t *Trie) ForEach(f func(string, interface{}) bool) {
 	t.forEach(f, &buf)
 }
 
-// apply f to each (k, v) pair in the trie where key <= k
-func (t *Trie) forEachBound(key string, f func(string, interface{}) bool, buf *bytes.Buffer) bool {
-	if t.value == nil && t.children == nil {
-		return true
-	}
-	
-	if t.suffix >= key {
-		return t.forEach(f)
-	}
-
-	// t.suffix < key, so only the children matter
-	if t.children == nil {
-		return true
-	}
-
-	s := commonPrefix(t.suffix, key)
-
-	if s < len(t.suffix) {
-		// assert s == 0 && t.suffix != ""
-		if s != 0 || t.suffix == "" {
-			panic(`s != 0 || t.suffix == ""`)
-		}
-		// therefore key is > t.suffix+child+.... 
-		return true
-	}
-	// s == len(t.suffix), so key[:s] == t.suffix
-	// but key > t.suffix, therefore 
-	// assert s < len(key)
-	if s >= len(key) {
-		panic(`s > len(key)`)
-	}
-	
-
-	pfx := buf.Len()
-	buf.WriteString(t.suffix)
-
-	l := buf.Len()
-	buf.WriteByte(t.base)
-	for _, v := range t.children {
-		switch c := buf.Bytes()[l] {
-			case c < key[s]
-		if buf.Bytes()[l] == key[s] {
-			if !v.forEachBound(f, buf) {
-				return false
-			}
-		} else {
-			if !v.forEach(f, buf) {
-				return false
-			}
-		}
-		buf.Bytes()[l]++
-	}
-	
-	buf.Truncate(pfx)
-
-	return true
-}
-
 // String returns a multiline string representation of the trie
 // in the form
 //    trie[
