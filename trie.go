@@ -131,7 +131,7 @@ func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool
 			buf.Bytes()[l]++
 		}
 	}
-	
+
 	buf.Truncate(pfx)
 
 	return true
