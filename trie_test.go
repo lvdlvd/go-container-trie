@@ -348,3 +348,49 @@ func BenchmarkForEach10(b *testing.B)    { forEach(10, b) }
 func BenchmarkForEach100(b *testing.B)   { forEach(100, b) }
 func BenchmarkForEach1000(b *testing.B)  { forEach(1000, b) }
 func BenchmarkForEach10000(b *testing.B) { forEach(10000, b) }
+
+
+func byteEqual(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+
+func forEachB(size int, b *testing.B) {
+	b.StopTimer()
+	var tr Trie
+	for _, s := range tc[:size] {
+		tr.Put(s, []byte(s))
+	}
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		i := 0
+		tr.ForEachB(func(key []byte, val interface{}) bool {
+			i++
+			if !byteEqual(key, val.([]byte)) {
+				b.Error(key, " != ", val.([]byte))
+				return false
+			}
+			return true
+		})
+
+		if i != size {
+			b.Error("aah", i)
+		}
+	}
+}
+
+func BenchmarkForEachB1(b *testing.B)     { forEachB(1, b) }
+func BenchmarkForEachB10(b *testing.B)    { forEachB(10, b) }
+func BenchmarkForEachB100(b *testing.B)   { forEachB(100, b) }
+func BenchmarkForEachB1000(b *testing.B)  { forEachB(1000, b) }
+func BenchmarkForEachB10000(b *testing.B) { forEachB(10000, b) }
+

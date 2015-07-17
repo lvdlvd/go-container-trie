@@ -59,7 +59,28 @@ func (t *Trie) Put(key string, value interface{}) {
 	if s < len(t.suffix) {
 		// split on s: turn t into a node with suffix[:s]
 		// and move the contents to child[suffix[s]-t.base] with suffix[s+1:]
-		*t = Trie{t.suffix[:s], nil, []Trie{{t.suffix[s+1:], t.value, t.children, t.base}}, t.suffix[s]}
+		// we save the extra alloc on the common case that we'd insert a subtrie
+		// on key[s] immediately below by making children large enough
+		newbase := t.suffix[s]
+		newlen := 1
+		if s < len(key) {
+			for key[s] < newbase || int(key[s]) >= int(newbase)+newlen {
+				newlen *= 2
+				newbase &= ^byte(newlen - 1)
+			}
+		}
+		newch := make([]Trie, newlen)
+		newch[t.suffix[s]-newbase] = Trie{
+			suffix:   t.suffix[s+1:],
+			value:    t.value,
+			children: t.children,
+			base:     t.base,
+		}
+
+		t.suffix = t.suffix[:s]
+		t.value = nil
+		t.children = newch
+		t.base = newbase
 	}
 
 	if s == len(key) {
@@ -131,7 +152,7 @@ func (t *Trie) subtrie(key string) (*Trie, int) {
 	return t.children[key[s]-t.base].subtrie(key[s+1:])
 }
 
-func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool {
+func (t *Trie) forEach(f func([]byte, interface{}) bool, buf *bytes.Buffer) bool {
 	if t.value == nil && t.children == nil {
 		return true
 	}
@@ -139,7 +160,7 @@ func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool
 	pfx := buf.Len()
 	buf.WriteString(t.suffix)
 
-	if t.value != nil && !f(buf.String(), t.value) {
+	if t.value != nil && !f(buf.Bytes(), t.value) { // this is the alloc (probably)
 		return false
 	}
 
@@ -164,6 +185,14 @@ func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool
 // iteration will stop.
 func (t *Trie) ForEach(f func(string, interface{}) bool) {
 	var buf bytes.Buffer
+	t.forEach(func(b []byte, v interface{}) bool { return f(string(b), v) }, &buf)
+}
+
+// ForEachB will apply the function f to each key, value pair in the
+// Trie in sorted (depth-first pre-)order.  if f returns false, the
+// iteration will stop.
+func (t *Trie) ForEachB(f func([]byte, interface{}) bool) {
+	var buf bytes.Buffer
 	t.forEach(f, &buf)
 }
 
@@ -176,7 +205,7 @@ func (t *Trie) ForEachPfx(pfx string, f func(string, interface{}) bool) {
 	var buf bytes.Buffer
 	buf.Grow(len(pfx))
 	buf.WriteString(pfx[:len(pfx)-sfx])
-	t.forEach(f, &buf)
+	t.forEach(func(b []byte, v interface{}) bool { return f(string(b), v) }, &buf)
 }
 
 // String returns a multiline string representation of the trie
