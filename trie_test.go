@@ -21,38 +21,40 @@ import (
 	"testing"
 )
 
-func TestThatItWorks(t *testing.T) {
+var tcAA = []string{
+	"aardvark",
+	"abro",
+	"abrocome",
+	"abrogable",
+	"abrogate",
+	"abrogation",
+	"abrogative",
+	"abrogator",
+	"abronah",
+	"abroniaaaaa",
+	"abroniaaaab",
+	"abroniaaa",
+}
 
-	tc := []string{
-		"aardvark",
-		"abro",
-		"abrocome",
-		"abrogable",
-		"abrogate",
-		"abrogation",
-		"abrogative",
-		"abrogator",
-		"abronah",
-		"abroniaaaaa",
-		"abroniaaaab",
-		"abroniaaa",
-	}
-
-	m := make(map[string]string, len(tc))
-	for _, s := range tc {
-		m[s] = s
+func mktc() (Trie, map[string]bool) {
+	m := make(map[string]bool, len(tcAA))
+	for _, s := range tcAA {
+		m[s] = true
 	}
 
 	var tr Trie
-	for _, s := range m { // getting them from m gives a randomized order
+	for s, _ := range m { // getting them from m gives a randomized order
 		tr.Put(s, s)
 	}
+	return tr, m
+}
 
-	//	tr.dump(1)
-	//	t.Error(tr.shape())
+func TestThatItWorks(t *testing.T) {
+	tr, m := mktc();
+	//tr.dump(1)
 
-	// We can retrieve what we put in 
-	for _, s := range tc {
+	// We can retrieve what we put in
+	for s, _ := range m {
 		if v, ok := tr.Get(s).(string); !ok || v != s {
 			if ok {
 				t.Error("tr[", s, "] == ", v, ", expecting ", s)
@@ -63,9 +65,9 @@ func TestThatItWorks(t *testing.T) {
 	}
 
 	// we don't retrieve any prefixes (except explicitly inserted ones)
-	for _, s := range tc {
+	for s, _ := range m {
 		for i := 0; i < len(s)-1; i++ {
-			if _, ok := m[s[:i]]; ok {
+			if m[s[:i]] {
 				continue
 			}
 			if v := tr.Get(s[:i]); v != nil {
@@ -85,7 +87,7 @@ func TestThatItWorks(t *testing.T) {
 			}
 		}
 
-		if _, ok := m[s]; !ok {
+		if !m[s] {
 			t.Error("tr[", s, "] == ", val, ", but should not exist")
 		}
 
@@ -100,6 +102,49 @@ func TestThatItWorks(t *testing.T) {
 
 	// ForEach exhausts
 	if len(m) > 0 {
+		t.Error("Unretrieved: ", m)
+	}
+}
+
+func TestForEachPfx(t *testing.T) {
+	tr, m := mktc();
+	//tr.dump(1)
+
+
+	const testPfx = "abr"
+	m2 := make(map[string]bool)
+	for s, _ := range m {
+		if len(s) > len(testPfx) && s[:len(testPfx)] == testPfx {
+			m2[s] = true
+		}
+	}
+
+	// ForEachPfx reproduces them all in sorted order
+	prev := ""
+	tr.ForEachPfx(testPfx, func(s string, val interface{}) bool {
+		if v, ok := val.(string); !ok || v != s {
+			if ok {
+				t.Error("tr[", s, "] == ", v, ", expecting ", s)
+			} else {
+				t.Error("tr[", s, "] == nil, expecting ", s)
+			}
+		}
+
+		if !m[s] {
+			t.Error("tr[", s, "] == ", val, ", but should not exist")
+		}
+
+		if prev >= s {
+			t.Errorf("out of order element: %+v after %+v", s, prev)
+		}
+		prev = s
+
+		delete(m2, s)
+		return true
+	})
+
+	// ForEachPfx exhausts
+	if len(m2) > 0 {
 		t.Error("Unretrieved: ", m)
 	}
 }

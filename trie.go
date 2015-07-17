@@ -109,6 +109,28 @@ func (t *Trie) Get(key string) interface{} {
 	return t.children[key[s]-t.base].Get(key[s+1:])
 }
 
+// subtrie retrieves the part of t that has key as a prefix.
+// and the part of its suffix that should be tacked on to key
+func (t *Trie) subtrie(key string) (*Trie, int) {
+	s := commonPrefix(t.suffix, key)
+
+	if s == len(key) {
+		return t, s
+	}
+
+	if s < len(t.suffix) {
+		return nil, 0
+	}
+
+	// s == len(suffix) but s < len(key): there's a bit of key left over
+
+	if key[s] < t.base || int(key[s]) > int(t.base)+len(t.children) {
+		return nil, 0
+	}
+
+	return t.children[key[s]-t.base].subtrie(key[s+1:])
+}
+
 func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool {
 	if t.value == nil && t.children == nil {
 		return true
@@ -142,6 +164,18 @@ func (t *Trie) forEach(f func(string, interface{}) bool, buf *bytes.Buffer) bool
 // iteration will stop.
 func (t *Trie) ForEach(f func(string, interface{}) bool) {
 	var buf bytes.Buffer
+	t.forEach(f, &buf)
+}
+
+// ForEachPfx applies ForEach to the sub-trie that starts with the given prefix.
+func (t *Trie) ForEachPfx(pfx string, f func(string, interface{}) bool) {
+	t, sfx := t.subtrie(pfx)
+	if t == nil {
+		return
+	}
+	var buf bytes.Buffer
+	buf.Grow(len(pfx))
+	buf.WriteString(pfx[:len(pfx)-sfx])
 	t.forEach(f, &buf)
 }
 
