@@ -52,7 +52,7 @@ func mktc() (Trie, map[string]bool) {
 func TestThatItWorks(t *testing.T) {
 	tr, m := mktc();
 	//tr.dump(1)
-
+	//t.Error(tr.shape())
 	// We can retrieve what we put in
 	for s, _ := range m {
 		if v, ok := tr.Get(s).(string); !ok || v != s {
@@ -158,7 +158,7 @@ var tc []string
 func init() {
 	var b bytes.Buffer
 	m := make(map[string]bool)
-	for len(m) < 10000 {
+	for len(m) < 100000 {
 		b.Reset()
 		for l := rand.Intn(4) + 1; l > 0; l-- {
 			ch := byte(65 + rand.Intn(alphabet))
@@ -175,7 +175,7 @@ func init() {
 
 // just insertion, no retrieval
 func nativeMap(size int) {
-	m := make(map[string]string, len(tc))
+	m := make(map[string]string, size)
 	for _, s := range tc[:size] {
 		m[s] = s
 	}
@@ -183,7 +183,7 @@ func nativeMap(size int) {
 
 // insertion and get all in sorted order
 func nativeMapAndSort(size int) {
-	m := make(map[string]string, len(tc))
+	m := make(map[string]string, size)
 	for _, s := range tc[:size] {
 		m[s] = s
 	}
@@ -235,6 +235,11 @@ func BenchmarkNativeMap10000(b *testing.B) {
 		nativeMap(10000)
 	}
 }
+func BenchmarkNativeMap100000(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		nativeMap(100000)
+	}
+}
 
 func BenchmarkNativeMapAndSort10(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -254,6 +259,11 @@ func BenchmarkNativeMapAndSort1000(b *testing.B) {
 func BenchmarkNativeMapAndSort10000(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		nativeMapAndSort(10000)
+	}
+}
+func BenchmarkNativeMapAndSort100000(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		nativeMapAndSort(100000)
 	}
 }
 
@@ -277,6 +287,11 @@ func BenchmarkWithTrie10000(b *testing.B) {
 		withTrie(10000)
 	}
 }
+func BenchmarkWithTrie100000(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		withTrie(100000)
+	}
+}
 
 func BenchmarkWithTrieAndAll10(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -296,6 +311,11 @@ func BenchmarkWithTrieAndAll1000(b *testing.B) {
 func BenchmarkWithTrieAndAll10000(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		withTrieAndAll(10000)
+	}
+}
+func BenchmarkWithTrieAndAll100000(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		withTrieAndAll(100000)
 	}
 }
 
