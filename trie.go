@@ -20,7 +20,7 @@ import (
 	"fmt"
 )
 
-// A trie maintains a sorted collection of values keyed on a string.
+// A Trie maintains a sorted collection of values keyed on a string.
 // Insertion is O(len(key)). Unlike Go's built-in map there is no
 // distinction between a nil and a non-existent value.
 // The zero value for Trie is an empty trie ready to use.

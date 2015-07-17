@@ -43,18 +43,18 @@ func mktc() (Trie, map[string]bool) {
 	}
 
 	var tr Trie
-	for s, _ := range m { // getting them from m gives a randomized order
+	for s := range m { // getting them from m gives a randomized order
 		tr.Put(s, s)
 	}
 	return tr, m
 }
 
 func TestThatItWorks(t *testing.T) {
-	tr, m := mktc();
+	tr, m := mktc()
 	//tr.dump(1)
 	//t.Error(tr.shape())
 	// We can retrieve what we put in
-	for s, _ := range m {
+	for s := range m {
 		if v, ok := tr.Get(s).(string); !ok || v != s {
 			if ok {
 				t.Error("tr[", s, "] == ", v, ", expecting ", s)
@@ -65,7 +65,7 @@ func TestThatItWorks(t *testing.T) {
 	}
 
 	// we don't retrieve any prefixes (except explicitly inserted ones)
-	for s, _ := range m {
+	for s := range m {
 		for i := 0; i < len(s)-1; i++ {
 			if m[s[:i]] {
 				continue
@@ -107,13 +107,12 @@ func TestThatItWorks(t *testing.T) {
 }
 
 func TestForEachPfx(t *testing.T) {
-	tr, m := mktc();
+	tr, m := mktc()
 	//tr.dump(1)
-
 
 	const testPfx = "abr"
 	m2 := make(map[string]bool)
-	for s, _ := range m {
+	for s := range m {
 		if len(s) > len(testPfx) && s[:len(testPfx)] == testPfx {
 			m2[s] = true
 		}
@@ -188,7 +187,7 @@ func nativeMapAndSort(size int) {
 		m[s] = s
 	}
 	sl := make([]string, len(m))
-	for k, _ := range m {
+	for k := range m {
 		sl = append(sl, k)
 	}
 	sort.Sort(sort.StringSlice(sl))
