@@ -123,7 +123,7 @@ func (t *Trie) Get(key string) interface{} {
 		return t.value
 	}
 
-	if key[s] < t.base || int(key[s]) > int(t.base)+len(t.children) {
+	if key[s] < t.base || int(key[s]) >= int(t.base)+len(t.children) {
 		return nil
 	}
 
@@ -146,7 +146,7 @@ func (t *Trie) FindPfx(key string) (pfx string, val interface{}) {
 	}
 	// there's a bit of key left over.  if it is out of range, we're the longest prefix
 
-	if key[s] < t.base || int(key[s]) > int(t.base)+len(t.children) {
+	if key[s] < t.base || int(key[s]) >= int(t.base)+len(t.children) {
 		if t.value != nil {
 			return t.suffix, t.value
 		}
@@ -179,7 +179,7 @@ func (t *Trie) subtrie(key string) (*Trie, int) {
 
 	// s == len(suffix) but s < len(key): there's a bit of key left over
 
-	if key[s] < t.base || int(key[s]) > int(t.base)+len(t.children) {
+	if key[s] < t.base || int(key[s]) >= int(t.base)+len(t.children) {
 		return nil, 0
 	}
 
