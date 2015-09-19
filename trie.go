@@ -130,6 +130,40 @@ func (t *Trie) Get(key string) interface{} {
 	return t.children[key[s]-t.base].Get(key[s+1:])
 }
 
+// FindPfx finds the longest prefix of key in the trie that has a non-nil value.
+func (t *Trie) FindPfx(key string) (pfx string, val interface{}) {
+	s := commonPrefix(t.suffix, key)
+
+	if s < len(t.suffix) {
+		return "", nil
+	}
+
+	if s == len(key) { // and s == len(t.suffix) , so key = t.suffix
+		if t.value != nil {
+			return t.suffix, t.value
+		}
+		return "", nil
+	}
+	// there's a bit of key left over.  if it is out of range, we're the longest prefix
+
+	if key[s] < t.base || int(key[s]) > int(t.base)+len(t.children) {
+		if t.value != nil {
+			return t.suffix, t.value
+		}
+		return "", nil
+	}
+
+	p, v := t.children[key[s]-t.base].FindPfx(key[s+1:])
+	if v != nil {
+		return key[:s+1] + p, v
+	}
+
+	if t.value != nil {
+		return t.suffix, t.value
+	}
+	return "", nil
+}
+
 // subtrie retrieves the part of t that has key as a prefix.
 // and the part of its suffix that should be tacked on to key
 func (t *Trie) subtrie(key string) (*Trie, int) {

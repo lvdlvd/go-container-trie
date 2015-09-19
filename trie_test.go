@@ -148,6 +148,33 @@ func TestForEachPfx(t *testing.T) {
 	}
 }
 
+func TestFindPfx(t *testing.T) {
+	var tr Trie
+	tr.Put("fooaaaa", 1)
+	tr.Put("foocdef", 2)
+
+	for _, tc := range []struct {
+		key, pfx string
+		val      interface{}
+	}{
+		{"", "", nil},
+		{"a", "", nil},
+		{"f", "", nil},
+		{"foo", "", nil},
+		{"fooaaaa", "fooaaaa", 1},
+		{"fooaaaabcd", "fooaaaa", 1},
+		{"foob", "", nil},
+		{"foocd", "", nil},
+		{"foocdef", "foocdef", 2},
+		{"foocdefgh", "foocdef", 2},
+		{"g", "", nil},
+	} {
+		if k, v := tr.FindPfx(tc.key); k != tc.pfx || v != tc.val {
+			t.Errorf("FindPfx(%q) = %q, %v,  expecting %q, %v", tc.key, k, v, tc.pfx, tc.val)
+		}
+	}
+}
+
 // Benchmarks to compare inserting random strings into a map or a trie and retrieving them in sorted order
 // generate 10000 strings from a limited alphabet (8 characters) to get a fair probability of shared prefixes.
 const alphabet = 8
@@ -349,7 +376,6 @@ func BenchmarkForEach100(b *testing.B)   { forEach(100, b) }
 func BenchmarkForEach1000(b *testing.B)  { forEach(1000, b) }
 func BenchmarkForEach10000(b *testing.B) { forEach(10000, b) }
 
-
 func byteEqual(a, b []byte) bool {
 	if len(a) != len(b) {
 		return false
@@ -361,7 +387,6 @@ func byteEqual(a, b []byte) bool {
 	}
 	return true
 }
-
 
 func forEachB(size int, b *testing.B) {
 	b.StopTimer()
@@ -393,4 +418,3 @@ func BenchmarkForEachB10(b *testing.B)    { forEachB(10, b) }
 func BenchmarkForEachB100(b *testing.B)   { forEachB(100, b) }
 func BenchmarkForEachB1000(b *testing.B)  { forEachB(1000, b) }
 func BenchmarkForEachB10000(b *testing.B) { forEachB(10000, b) }
-
