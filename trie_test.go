@@ -181,12 +181,16 @@ func TestFindAllPfx(t *testing.T) {
 	tr.Put("aaaa", 1)
 	tr.Put("aabb", 2)
 	tr.Put("aa", 3)
+	tr.Put("azzz", 4)
 
 	for _, tc := range []struct {
 		key string
 		kvs []KV
 	}{
 		{"aa", []KV{{"aa", 3}}},
+		{"aaa", []KV{{"aa", 3}}},
+		{"aab", []KV{{"aa", 3}}},
+		{"aac", []KV{{"aa", 3}}},
 		{"aabb", []KV{{"aabb", 2}, {"aa", 3}}},
 		{"aabbcc", []KV{{"aabb", 2}, {"aa", 3}}},
 	} {
