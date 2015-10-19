@@ -164,6 +164,45 @@ func (t *Trie) FindPfx(key string) (pfx string, val interface{}) {
 	return "", nil
 }
 
+// A KV is a key, value pair, as returned by FindAllPfx
+type KV struct {
+	K string
+	V interface{}
+}
+
+// FindAllPfx returns all prefixes of key in the trie and their values
+// in order of longest to shortest!
+func (t *Trie) FindAllPfx(key string) []KV { return t.findAllPfx(key, 0) }
+
+func (t *Trie) findAllPfx(key string, ofs int) []KV {
+	s := commonPrefix(t.suffix, key[ofs:])
+
+	if s < len(t.suffix) {
+		return nil
+	}
+
+	if ofs+s == len(key) { // and s == len(t.suffix) , so key[ofs:] = t.suffix
+		if t.value != nil {
+			return []KV{{key[:ofs+s], t.value}}
+		}
+		return nil
+	}
+	// there's a bit of key left over.  if it is out of range, we're the longest prefix
+
+	if key[s] < t.base || int(key[s]) >= int(t.base)+len(t.children) {
+		if t.value != nil {
+			return []KV{{key[:ofs+s], t.value}}
+		}
+		return nil
+	}
+
+	kv := t.children[key[s]-t.base].findAllPfx(key, ofs+s+1)
+	if t.value != nil {
+		kv = append(kv, KV{key[:ofs+s], t.value})
+	}
+	return kv
+}
+
 // subtrie retrieves the part of t that has key as a prefix.
 // and the part of its suffix that should be tacked on to key
 func (t *Trie) subtrie(key string) (*Trie, int) {

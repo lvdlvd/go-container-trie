@@ -17,6 +17,7 @@ package trie
 import (
 	"bytes"
 	"math/rand"
+	"reflect"
 	"sort"
 	"testing"
 )
@@ -171,6 +172,26 @@ func TestFindPfx(t *testing.T) {
 	} {
 		if k, v := tr.FindPfx(tc.key); k != tc.pfx || v != tc.val {
 			t.Errorf("FindPfx(%q) = %q, %v,  expecting %q, %v", tc.key, k, v, tc.pfx, tc.val)
+		}
+	}
+}
+
+func TestFindAllPfx(t *testing.T) {
+	var tr Trie
+	tr.Put("aaaa", 1)
+	tr.Put("aabb", 2)
+	tr.Put("aa", 3)
+
+	for _, tc := range []struct {
+		key string
+		kvs []KV
+	}{
+		{"aa", []KV{{"aa", 3}}},
+		{"aabb", []KV{{"aabb", 2}, {"aa", 3}}},
+		{"aabbcc", []KV{{"aabb", 2}, {"aa", 3}}},
+	} {
+		if kvs := tr.FindAllPfx(tc.key); !reflect.DeepEqual(kvs, tc.kvs) {
+			t.Errorf("FindAllPfx(%q), expected %+v, got %+v", tc.key, tc.kvs, kvs)
 		}
 	}
 }
