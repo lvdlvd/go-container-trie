@@ -156,37 +156,28 @@ type KV struct {
 	V interface{}
 }
 
-// FindAllPfx returns all prefixes of key in the trie and their values
-// in order of longest to shortest!
-func (t *Trie) FindAllPfx(key string) []KV { return t.findAllPfx(key, 0) }
+// FindAllPfx returns all prefixes of key in the trie and their values.
+func (t *Trie) FindAllPfx(key string) []KV { return t.findAllPfx(key, 0, nil) }
 
-func (t *Trie) findAllPfx(key string, ofs int) []KV {
+func (t *Trie) findAllPfx(key string, ofs int, kvs []KV) []KV {
 	s := commonPrefix(t.suffix, key[ofs:])
 
-	if s < len(t.suffix) {
-		return nil
+	if s < len(t.suffix) { // key is a prefix of us
+		return kvs
 	}
 
-	if ofs+s == len(key) { // and s == len(t.suffix) , so key[ofs:] = t.suffix
-		if t.value != nil {
-			return []KV{{key[:ofs+s], t.value}}
-		}
-		return nil
-	}
-	// there's a bit of key left over.  if it is out of range, we're the longest prefix
-
-	if key[s] < t.base || int(key[s]) >= int(t.base)+len(t.children) {
-		if t.value != nil {
-			return []KV{{key[:ofs+s], t.value}}
-		}
-		return nil
-	}
-
-	kv := t.children[key[s]-t.base].findAllPfx(key, ofs+s+1)
+	// we are equal to, or a prefix of key
 	if t.value != nil {
-		kv = append(kv, KV{key[:ofs+s], t.value})
+		kvs = append(kvs, KV{key[:ofs+s], t.value})
 	}
-	return kv
+
+	// there's a bit of key left over.
+	if ofs+s < len(key) {
+		if key[ofs+s] >= t.base && int(key[ofs+s]) < int(t.base)+len(t.children) {
+			kvs = t.children[key[ofs+s]-t.base].findAllPfx(key, ofs+s+1, kvs)
+		}
+	}
+	return kvs
 }
 
 // subtrie retrieves the part of t that has key as a prefix.

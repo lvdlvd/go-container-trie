@@ -1,17 +1,3 @@
-// Copyright 2012 Google Inc. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package trie
 
 import (
@@ -181,7 +167,7 @@ func TestFindAllPfx(t *testing.T) {
 	tr.Put("aaaa", 1)
 	tr.Put("aabb", 2)
 	tr.Put("aa", 3)
-	tr.Put("azzz", 4)
+	tr.Put("adzz", 4)
 
 	for _, tc := range []struct {
 		key string
@@ -191,8 +177,8 @@ func TestFindAllPfx(t *testing.T) {
 		{"aaa", []KV{{"aa", 3}}},
 		{"aab", []KV{{"aa", 3}}},
 		{"aac", []KV{{"aa", 3}}},
-		{"aabb", []KV{{"aabb", 2}, {"aa", 3}}},
-		{"aabbcc", []KV{{"aabb", 2}, {"aa", 3}}},
+		{"aabb", []KV{{"aa", 3}, {"aabb", 2}}},
+		{"aabbcc", []KV{{"aa", 3}, {"aabb", 2}}},
 	} {
 		if kvs := tr.FindAllPfx(tc.key); !reflect.DeepEqual(kvs, tc.kvs) {
 			t.Errorf("FindAllPfx(%q), expected %+v, got %+v", tc.key, tc.kvs, kvs)
